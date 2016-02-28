@@ -1,95 +1,177 @@
-var Hexagon = function() {
-  var leftX;
-  var leftY;
-  var width;
-  var height;
+var Board = function(){
+  var grid = {};
 
-  function init(x, y, w) {
-    leftX = x;
-    leftY = y;
-    width = w;
-    height = Math.sqrt(3) / 2 * width;
-  };
+  /* This is when you use computed literals in ES2015 */
+  function addHex(x, y, z, Hex){
+    if (grid[x] !== undefined){
+      if (grid[x][y] !== undefined){
+        grid[x][y][z] = Hex;
+      } else {
+        grid[x][y] = {};
+        grid[x][y][z] = Hex;
+      }
+    } else {
+      grid[x] = {};
+      grid[x][y] = {};
+      grid[x][y][z] = Hex;
+    }
 
-  function getCoords() {
+    return Hex;
+  }
+
+  function getHex(x, y, z){
+    return grid[x][y][z] !== undefined ? grid[x][y][z] : null;
+  }
+
+  return {
+    addHex: addHex,
+    getHex: getHex,
+  }
+};
+
+var Hex = function(x, y, z, raphael_element){
+  var x = x;
+  var y = y;
+  var z = z;
+  var raphael_element = raphael_element;
+  var piece = null;
+
+  function getCoords(){
+    return [x, y, z];
+  }
+
+  function getId(){
+    return 'h'+x+"_"+y+"_"+z; // ex: h_0_1_-1
+  }
+  
+  function getOrigin(){
     return [
-      [leftX, leftY],
-      [leftX + .25 * width, leftY + .5 * height],
-      [leftX + .75 * width, leftY + .5 * height],
-      [leftX + width, leftY],
-      [leftX + .75 * width, leftY - .5 * height],
-      [leftX + .25 * width, leftY - .5 * height],
+      raphael_element.attrs.path[5][1] - 3, 
+      raphael_element.attrs.path[5][2] + 5,
     ];
-  };
+  }
 
-  function getPathstring() {
-    var coords = getCoords();
+  function getPiece(){
+    return piece;
+  }
+
+  function setPiece(Piece){
+    var piece = Piece;
+    return true;
+  }
+
+  return {
+    getCoords: getCoords,
+    getId: getId,
+    getOrigin: getOrigin,
+    getPiece: getPiece,
+    setPiece: setPiece,
+  }
+};
+
+var Piece = function(type, color){
+  var type = type;
+  var color = color;
+  var captured = false;
+
+  function getType(){
+    return type;
+  }
+
+  // for pawn promotions!
+  function setType(Type){
+    type = Type;
+  }
+
+  function getColor(){
+    return color;
+  }
+
+  function isCaptured(){
+    return captured;
+  }
+
+  function capture(){
+    captured = true;
+  }
+
+  return {
+    getType: getType,
+    setType: setType,
+    getColor: getColor,
+    isCaptured: captured,
+    capture: capture
+  }
+};
+
+function drawBoard(paper){
+  var board = Board();
+  var w = 50;
+  var h = Math.sqrt(3) / 2 * w;
+  
+  function getHexPath(x, y, w){
+    var h = Math.sqrt(3) / 2 * w;
+    var coords = [[x, y],
+      [x + .25 * w, y + .5 * h],
+      [x + .75 * w, y + .5 * h],
+      [x + w, y],
+      [x + .75 * w, y - .5 * h],
+      [x + .25 * w, y - .5 * h]];
     var pathstring = "M";
     for (pair of coords) {
       pathstring += pair[0] + "," + pair[1] + "L";
     }
     pathstring = pathstring.substring(0, pathstring.length - 1) + "Z";
     return pathstring;
-  };
-  
-  return {
-    init: init,
-    getPathstring: getPathstring,
-    getCoords: getCoords,
   }
-}();
 
-function labelNode(x, y, z, rElement, hexGrid){
-  rElement.node.setAttribute('data-x', x);
-  rElement.node.setAttribute('data-y', y);
-  rElement.node.setAttribute('data-z', z);
-  rElement.node.setAttribute('id', ''+x+"_"+y+"_"+z);
-
-  if (x in hexGrid) {
-    if (y in hexGrid[x]){
-      hexGrid[x][y][z] = rElement;
-    } else {
-      hexGrid[x][y] = { z: rElement};
-    }
-  } else {
-    hexGrid[x] = { y : {z: rElement}};
+  function labelNode(x, y, z, rElement){
+    rElement.node.setAttribute('data-x', x);
+    rElement.node.setAttribute('data-y', y);
+    rElement.node.setAttribute('data-z', z);
+    rElement.node.setAttribute('id', 'h'+x+"_"+y+"_"+z);
+    var hex = Hex(x, y, z, rElement);
+    board.addHex(x, y, z, hex);
   }
-  return hexGrid;
-}
 
-function drawBoard(paper){
-  var W = 50;
-  var H = Math.sqrt(3) / 2 * W;
-  var hexGrid = {};
 
+  /* The first half of the board increases in size */
   for (var col = 0; col<6; col++){
     for (var row = 0; row < 6 + col; row++){
-      Hexagon.init(col * .75 * W, (3 - .5 * col)*H + (row * H), W);
-      var h = paper.path(Hexagon.getPathstring());
+      var x = col * .75 * w;
+      var y = h * (-.5 * col + row + 3);
+      var pathstring = getHexPath(x, y, w)
+      var raphael_element = paper.path(pathstring);
+
       var h_x = col - 5;
       var h_y = 5 - row;
       var h_z = row - col;
-      h.node.setAttribute('class', 'hex hex' + (col+row)%3);
-      hexGrid = labelNode(h_x, h_y, h_z, h, hexGrid);
+      raphael_element.node.setAttribute('class', 'hex hex' + (col+row)%3);
+      labelNode(h_x, h_y, h_z, raphael_element);
     }
   }
 
+  /* The second half decreases and the coordinates change */
   for (var col = 6; col<11; col++){
     for (var row = 0; row < 16 - col; row++){
-      Hexagon.init(col * .75 * W, (.5 * H * (col-6)) + ((row+ 1) * H), W);
-      var h = paper.path(Hexagon.getPathstring());
+      var x = col * .75 * w;
+      var y = h * (.5 * col + row - 2);
+      var pathstring = getHexPath(x, y, w);
+      var raphael_element = paper.path(pathstring);
+
       var h_x = col - 5;
       var h_y = 10 - col;
       var h_z = row - 5;
-      h.node.setAttribute('class', 'hex hex' + ((2*col)+row+1)%3);
-      hexGrid = labelNode(h_x, h_y, h_z, h, hexGrid);
+      raphael_element.node.setAttribute('class', 'hex hex' + ((2*col)+row+1)%3);
+      labelNode(h_x, h_y, h_z, raphael_element);
     }
   }
-  return hexGrid;
-}
+  return board;
+};
 
 document.addEventListener("DOMContentLoaded", function(event) { 
   var paper = Raphael("board", "100%", "100%");
-  var hexGrid = drawBoard(paper);
-  console.log(hexGrid);
+  var board = drawBoard(paper);
+  var coords = board.getHex(0, 0, 0).getOrigin();
+  paper.image('assets/blackPawn.svg', coords[0], coords[1], 30, 30);
 });
