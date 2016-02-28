@@ -1,0 +1,33 @@
+$hex-width: 50px
+$hex-height: 43.3px
+$board-width: $hex-width * 8.5
+$board-height: $board-width + $hex-width
+
+body
+  min-height: $board-height * 1.25
+  height: 100vh
+  margin: 0
+  display: flex
+  justify-content: center
+  align-items: center
+  background-color: orange
+
+#board
+  width: $board-width
+  height: $board-height
+
+.hex
+  stroke: transparent
+  cursor: pointer
+
+.hex:hover
+  fill: white
+
+.hex1 
+  fill: rgba(255, 255, 255, .75)
+
+.hex0 
+  fill: rgba(255, 255, 255, .25)
+
+.hex2  
+  fill: rgba(255, 255, 255, .5)

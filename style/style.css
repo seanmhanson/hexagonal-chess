@@ -1,0 +1,45 @@
+body {
+  min-height: 593.75px;
+  height: 100vh;
+  margin: 0;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+  -webkit-justify-content: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -webkit-box-align: center;
+  -webkit-align-items: center;
+      -ms-flex-align: center;
+          align-items: center;
+  background-color: orange;
+}
+
+#board {
+  width: 425px;
+  height: 475px;
+}
+
+.hex {
+  stroke: transparent;
+  position: relative;
+  cursor: pointer;
+}
+
+.hex:hover {
+  fill: white;
+}
+
+.hex1 {
+  fill: rgba(255, 255, 255, 0.75);
+}
+
+.hex0 {
+  fill: rgba(255, 255, 255, 0.25);
+}
+
+.hex2 {
+  fill: rgba(255, 255, 255, 0.5);
+}
