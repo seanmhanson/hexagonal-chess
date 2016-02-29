@@ -23,9 +23,14 @@ var Board = function(){
     return grid[x][y][z] !== undefined ? grid[x][y][z] : null;
   }
 
+  function getGrid(){
+    return grid;
+  }
+
   return {
     addHex: addHex,
     getHex: getHex,
+    getGrid: getGrid,
   }
 };
 
@@ -104,7 +109,7 @@ var Piece = function(type, color){
   }
 };
 
-function drawBoard(paper){
+function setupBoard(paper){
   var board = Board();
   var w = 50;
   var h = Math.sqrt(3) / 2 * w;
@@ -169,9 +174,30 @@ function drawBoard(paper){
   return board;
 };
 
+function setupGame(paper, board, variant){
+  var config = variants[variant];  
+
+  for (var color in config.pieces) {
+    if (!config.pieces.hasOwnProperty(color)) continue;
+    var piecesByColor = config.pieces[color];
+
+    for (var piece in piecesByColor){
+      if (!piecesByColor.hasOwnProperty(piece)) continue;
+      var locations = piecesByColor[piece];
+      var fileName = "assets/" + color + piece.charAt(0).toUpperCase() + piece.slice(1) + ".svg"
+      
+      for (var i = 0; i < locations.length; i++){
+        var coordinates = locations[i];
+        var pieceOrigin = board.getHex(coordinates[0], coordinates[1], coordinates[2]).getOrigin();
+        paper.image(fileName, pieceOrigin[0], pieceOrigin[1], 30, 30);
+      }
+    }
+  }
+};
+
 document.addEventListener("DOMContentLoaded", function(event) { 
   var paper = Raphael("board", "100%", "100%");
-  var board = drawBoard(paper);
-  var coords = board.getHex(0, 0, 0).getOrigin();
-  paper.image('assets/blackPawn.svg', coords[0], coords[1], 30, 30);
+  var board = setupBoard(paper);
+  setupGame(paper, board, "Glinski");
+  
 });
