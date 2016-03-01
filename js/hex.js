@@ -113,7 +113,6 @@ var Piece = function(type, color) {
   }
 };
 
-
 var Game = function() {
   var paper = Raphael("board", "100%", "100%");
   var board = new Board();
@@ -200,7 +199,10 @@ var Game = function() {
         
         for (var i = 0; i < locations.length; i++) {
           var coordinates = locations[i];
-          var pieceOrigin = board.getHex(coordinates[0], coordinates[1], coordinates[2]).getOrigin();
+          var hex = board.getHex(coordinates[0], coordinates[1], coordinates[2]);
+          var pieceOrigin = hex.getOrigin();
+          var newPiece = new Piece(piece, color);
+          hex.setPiece(newPiece);
           paper.image(fileName, pieceOrigin[0], pieceOrigin[1], 30, 30);
         }
       }
