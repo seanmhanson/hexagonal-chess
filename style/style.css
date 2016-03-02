@@ -2,9 +2,18 @@ body {
   min-height: 593.75px;
   height: 100vh;
   margin: 0;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  -webkit-box-pack: center;
+  -webkit-justify-content: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -webkit-box-align: center;
+  -webkit-align-items: center;
+      -ms-flex-align: center;
+          align-items: center;
   background-color: orange; }
 
 #board {
@@ -28,5 +37,5 @@ body {
 .piece {
   cursor: pointer;
   pointer-events: none; }
-
+  
 /*# sourceMappingURL=style.css.map */
