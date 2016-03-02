@@ -20,14 +20,20 @@ body
   stroke: transparent
   cursor: pointer
 
-.hex:hover
-  fill: white
+  &.hex1 
+    fill: rgba(255, 255, 255, .75)
 
-.hex1 
-  fill: rgba(255, 255, 255, .75)
+  &.hex0 
+    fill: rgba(255, 255, 255, .25)
 
-.hex0 
-  fill: rgba(255, 255, 255, .25)
+  &.hex2  
+    fill: rgba(255, 255, 255, .5)
 
-.hex2  
-  fill: rgba(255, 255, 255, .5)
+  &.active, &:active
+    fill: white
+    stroke: rgba(255, 255, 255, .5)
+    stroke-width: 5px
+
+.piece
+  cursor: pointer
+  pointer-events: none

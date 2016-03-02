@@ -1,5 +1,6 @@
 var Board = function() {
   var grid = {};
+  var activeHex = null;
 
   /* This is when you use computed literals in ES2015 */
   function addHex(x, y, z, Hex) {
@@ -27,10 +28,30 @@ var Board = function() {
     return grid;
   }
 
+  function setActiveHex(Hex) {
+    activeHex = Hex;
+    return this;
+  }
+
+  function getActiveHex() {
+    return activeHex;
+  }
+
+  function clearActiveHexes() {
+    if (activeHex && activeHex.isActive()) {
+      activeHex.toggle();
+      activeHex = null;
+    }
+    return this;
+  }
+
   return {
     addHex: addHex,
     getHex: getHex,
     getGrid: getGrid,
+    clearActiveHexes: clearActiveHexes,
+    setActiveHex: setActiveHex,
+    getActiveHex: getActiveHex,
   };
 };
 
@@ -41,6 +62,7 @@ var Hex = function(x, y, z, raphael_element) {
   var z = z;
   var raphael_element = raphael_element;
   var piece = null;
+  var active = false;
 
   function getCoords() {
     return [x, y, z];
@@ -61,8 +83,22 @@ var Hex = function(x, y, z, raphael_element) {
     return piece;
   }
 
+  function getRaphael() {
+    return raphael_element;
+  }
+
+  function isActive() {
+    return active;
+  }
+
+  function toggle() {
+    active = !active;
+    raphael_element.node.classList.toggle("active");
+    return this;
+  }
+
   function setPiece(Piece) {
-    var piece = Piece;
+    piece = Piece;
     return this;
   }
 
@@ -70,16 +106,21 @@ var Hex = function(x, y, z, raphael_element) {
     getCoords: getCoords,
     getId: getId,
     getOrigin: getOrigin,
+    getRaphael: getRaphael,
     getPiece: getPiece,
     setPiece: setPiece,
+    toggle: toggle,
+    isActive: isActive,
   }
 };
 
 
-var Piece = function(type, color) {
+var Piece = function(type, color, raphael_element, Hex) {
   var type = type;
   var color = color;
   var captured = false;
+  var raphael_element = raphael_element;
+  var hex = (Hex === undefined ? null : Hex);
 
   function getType() {
     return type;
@@ -95,6 +136,19 @@ var Piece = function(type, color) {
     return color;
   }
 
+  function getRaphael() {
+    return raphael_element;
+  }
+
+  function getHex() {
+    return hex;
+  }
+
+  function setHex(Hex) {
+    hex = Hex;
+    return this;
+  }
+
   function isCaptured() {
     return captured;
   }
@@ -108,17 +162,20 @@ var Piece = function(type, color) {
     getType: getType,
     setType: setType,
     getColor: getColor,
+    getRaphael: getRaphael,
     isCaptured: captured,
     capture: capture,
   }
 };
 
+
 var Game = function() {
   var paper = Raphael("board", "100%", "100%");
   var board = new Board();
-  var whiteToMove = true;
   var variant = "Glinski";
   var config = variants["Glinski"];
+  var whiteToMove = true;
+  var selectPiece = true;
 
   /* TODO: Abstract these values into the Glinski configuration */
   var HEX_WIDTH = 50;
@@ -153,6 +210,7 @@ var Game = function() {
       rElement.node.setAttribute('data-y', y);
       rElement.node.setAttribute('data-z', z);
       rElement.node.setAttribute('id', 'h' + x + "_" + y + "_" + z);
+      rElement.node.addEventListener("click", _onHexClick);
       board.addHex(x, y, z, hex);
     };
 
@@ -196,16 +254,42 @@ var Game = function() {
         if (!piecesByColor.hasOwnProperty(piece)) continue;
         var locations = piecesByColor[piece];
         var fileName = "assets/" + color + piece.charAt(0).toUpperCase() + piece.slice(1) + ".svg"
-        
+
         for (var i = 0; i < locations.length; i++) {
           var coordinates = locations[i];
           var hex = board.getHex(coordinates[0], coordinates[1], coordinates[2]);
           var pieceOrigin = hex.getOrigin();
-          var newPiece = new Piece(piece, color);
+          var raphaelPiece = paper.image(fileName, pieceOrigin[0], pieceOrigin[1], 30, 30);
+          var newPiece = new Piece(piece, color, raphaelPiece, hex);
+
           hex.setPiece(newPiece);
-          paper.image(fileName, pieceOrigin[0], pieceOrigin[1], 30, 30);
+          raphaelPiece.node.setAttribute("class", "piece");
+
         }
       }
+    }
+  };
+
+  var _onHexClick = function () {
+    var x = this.getAttribute("data-x");
+    var y = this.getAttribute("data-y");
+    var z = this.getAttribute("data-z");
+    var currentHex = board.getHex(x, y, z);
+    var piece = currentHex.getPiece();
+    
+    if (currentHex === board.getActiveHex()){
+      board.clearActiveHexes();
+    } else {
+      if (piece !== null) {
+        if (piece.getColor() === "white" && whiteToMove ||
+            piece.getColor() === "black" && !whiteToMove) {
+          board.clearActiveHexes();
+          board.setActiveHex(currentHex);
+          currentHex.toggle();
+          return;
+        }
+      }
+      board.clearActiveHexes();
     }
   };
 
